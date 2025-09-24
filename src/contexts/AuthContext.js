@@ -18,6 +18,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!auth) {
+      console.warn('Firebase auth not initialized');
       setLoading(false);
       return;
     }

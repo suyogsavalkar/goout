@@ -12,7 +12,7 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect authenticated users to plans page
+    // Only redirect if we have a user and we're not loading
     if (user && !loading) {
       router.push('/plans');
     }

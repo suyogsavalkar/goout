@@ -16,27 +16,31 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase only on client side
+// Initialize Firebase
 let app;
+let auth = null;
+let db = null;
+let storage = null;
+let googleProvider = null;
+
+// Only initialize on client side
 if (typeof window !== 'undefined') {
-  app = initializeApp(firebaseConfig);
+  try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
+    googleProvider = new GoogleAuthProvider();
+    
+    // Configure Google provider
+    googleProvider.addScope('email');
+    googleProvider.addScope('profile');
+  } catch (error) {
+    console.error('Firebase initialization error:', error);
+  }
 }
 
-// Initialize Firebase services only on client side
-export const auth = typeof window !== 'undefined' && app ? getAuth(app) : null;
-export const googleProvider = typeof window !== 'undefined' ? new GoogleAuthProvider() : null;
-
-// Initialize Firestore
-export const db = typeof window !== 'undefined' && app ? getFirestore(app) : null;
-
-// Initialize Firebase Storage
-export const storage = typeof window !== 'undefined' && app ? getStorage(app) : null;
-
-// Configure Google provider (only on client side)
-if (typeof window !== 'undefined' && googleProvider) {
-  googleProvider.addScope('email');
-  googleProvider.addScope('profile');
-}
+export { auth, db, storage, googleProvider };
 
 // Firestore offline support
 export const enableFirestoreNetwork = () => db ? enableNetwork(db) : Promise.resolve();
