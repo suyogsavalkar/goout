@@ -16,25 +16,30 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase only on client side
+let app;
+if (typeof window !== 'undefined') {
+  app = initializeApp(firebaseConfig);
+}
 
-// Initialize Firebase Authentication and get a reference to the service
-export const auth = getAuth(app);
-export const googleProvider = new GoogleAuthProvider();
+// Initialize Firebase services only on client side
+export const auth = typeof window !== 'undefined' && app ? getAuth(app) : null;
+export const googleProvider = typeof window !== 'undefined' ? new GoogleAuthProvider() : null;
 
 // Initialize Firestore
-export const db = getFirestore(app);
+export const db = typeof window !== 'undefined' && app ? getFirestore(app) : null;
 
 // Initialize Firebase Storage
-export const storage = getStorage(app);
+export const storage = typeof window !== 'undefined' && app ? getStorage(app) : null;
 
-// Configure Google provider
-googleProvider.addScope('email');
-googleProvider.addScope('profile');
+// Configure Google provider (only on client side)
+if (typeof window !== 'undefined' && googleProvider) {
+  googleProvider.addScope('email');
+  googleProvider.addScope('profile');
+}
 
 // Firestore offline support
-export const enableFirestoreNetwork = () => enableNetwork(db);
-export const disableFirestoreNetwork = () => disableNetwork(db);
+export const enableFirestoreNetwork = () => db ? enableNetwork(db) : Promise.resolve();
+export const disableFirestoreNetwork = () => db ? disableNetwork(db) : Promise.resolve();
 
 export default app;

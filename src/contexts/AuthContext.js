@@ -17,6 +17,11 @@ export function AuthProvider({ children }) {
   const [authMessage, setAuthMessage] = useState("");
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+    
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const isUmichEmail = user.email?.endsWith("@umich.edu");
@@ -72,6 +77,10 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signInWithGoogle = async () => {
+    if (!auth || !googleProvider) {
+      throw new Error("Firebase not initialized");
+    }
+    
     try {
       setLoading(true);
       const result = await signInWithPopup(auth, googleProvider);
@@ -85,6 +94,10 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
+    if (!auth) {
+      throw new Error("Firebase not initialized");
+    }
+    
     try {
       await signOut(auth);
     } catch (error) {

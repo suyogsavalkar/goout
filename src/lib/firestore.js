@@ -26,10 +26,17 @@ export const COLLECTIONS = {
   NOTIFICATIONS: 'notifications'
 };
 
+// Helper function to check if Firestore is initialized
+const checkDb = () => {
+  if (!db) throw new Error('Firestore not initialized');
+};
+
 // Profile operations
 export const profileService = {
   // Create a new profile
   async create(userId, profileData) {
+    checkDb();
+    
     try {
       const profileRef = doc(db, COLLECTIONS.PROFILES, userId);
       const profile = {
@@ -52,6 +59,8 @@ export const profileService = {
 
   // Get profile by user ID
   async getById(userId) {
+    checkDb();
+    
     try {
       const profileRef = doc(db, COLLECTIONS.PROFILES, userId);
       const profileSnap = await getDoc(profileRef);
@@ -68,6 +77,8 @@ export const profileService = {
 
   // Update profile
   async update(userId, updates) {
+    checkDb();
+    
     const profileRef = doc(db, COLLECTIONS.PROFILES, userId);
     const updateData = {
       ...updates,
@@ -80,6 +91,8 @@ export const profileService = {
 
   // Check if username is available
   async isUsernameAvailable(username, excludeUserId = null) {
+    checkDb();
+    
     const q = query(
       collection(db, COLLECTIONS.PROFILES),
       where('username', '==', username)
@@ -100,6 +113,8 @@ export const profileService = {
 
   // Get all profiles for people directory
   async getAll(limitCount = 50) {
+    checkDb();
+    
     const q = query(
       collection(db, COLLECTIONS.PROFILES),
       orderBy('created_at', 'desc'),
@@ -115,6 +130,8 @@ export const profileService = {
 
   // Add user to you_met array
   async addConnection(userId, metUserId) {
+    checkDb();
+    
     const profileRef = doc(db, COLLECTIONS.PROFILES, userId);
     await updateDoc(profileRef, {
       you_met: arrayUnion(metUserId),
@@ -124,6 +141,8 @@ export const profileService = {
 
   // Add event to user's events array
   async addEvent(userId, eventId) {
+    checkDb();
+    
     const profileRef = doc(db, COLLECTIONS.PROFILES, userId);
     await updateDoc(profileRef, {
       events: arrayUnion(eventId),
@@ -136,6 +155,8 @@ export const profileService = {
 export const eventService = {
   // Create a new event
   async create(eventData, hostId) {
+    checkDb();
+    
     const event = {
       ...eventData,
       host: hostId,
@@ -152,6 +173,7 @@ export const eventService = {
 
   // Get event by ID
   async getById(eventId) {
+    checkDb();
     const eventRef = doc(db, COLLECTIONS.EVENTS, eventId);
     const eventSnap = await getDoc(eventRef);
     
@@ -163,6 +185,7 @@ export const eventService = {
 
   // Get recent events (last 12 hours)
   async getRecent() {
+    checkDb();
     const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
     
     const q = query(
@@ -180,6 +203,7 @@ export const eventService = {
 
   // Get events by host
   async getByHost(hostId) {
+    checkDb();
     const q = query(
       collection(db, COLLECTIONS.EVENTS),
       where('host', '==', hostId),
@@ -195,6 +219,7 @@ export const eventService = {
 
   // Request to join event
   async requestToJoin(eventId, userId) {
+    checkDb();
     const eventRef = doc(db, COLLECTIONS.EVENTS, eventId);
     await updateDoc(eventRef, {
       requests: arrayUnion(userId)
@@ -203,6 +228,7 @@ export const eventService = {
 
   // Approve request
   async approveRequest(eventId, userId) {
+    checkDb();
     const eventRef = doc(db, COLLECTIONS.EVENTS, eventId);
     await updateDoc(eventRef, {
       requests: arrayRemove(userId),
@@ -215,6 +241,7 @@ export const eventService = {
 
   // Deny request
   async denyRequest(eventId, userId) {
+    checkDb();
     const eventRef = doc(db, COLLECTIONS.EVENTS, eventId);
     await updateDoc(eventRef, {
       requests: arrayRemove(userId)
@@ -223,12 +250,14 @@ export const eventService = {
 
   // Update event
   async update(eventId, updates) {
+    checkDb();
     const eventRef = doc(db, COLLECTIONS.EVENTS, eventId);
     await updateDoc(eventRef, updates);
   },
 
   // Delete event
   async delete(eventId) {
+    checkDb();
     const eventRef = doc(db, COLLECTIONS.EVENTS, eventId);
     await deleteDoc(eventRef);
   }
@@ -238,6 +267,7 @@ export const eventService = {
 export const notificationService = {
   // Create notification
   async create(notificationData) {
+    checkDb();
     const notification = {
       ...notificationData,
       read: false,
@@ -250,6 +280,7 @@ export const notificationService = {
 
   // Get notifications for user
   async getForUser(userId, limitCount = 20) {
+    checkDb();
     const q = query(
       collection(db, COLLECTIONS.NOTIFICATIONS),
       where('recipient_id', '==', userId),
@@ -266,6 +297,7 @@ export const notificationService = {
 
   // Mark notification as read
   async markAsRead(notificationId) {
+    checkDb();
     const notificationRef = doc(db, COLLECTIONS.NOTIFICATIONS, notificationId);
     await updateDoc(notificationRef, {
       read: true
@@ -274,6 +306,7 @@ export const notificationService = {
 
   // Mark all notifications as read for user
   async markAllAsRead(userId) {
+    checkDb();
     const q = query(
       collection(db, COLLECTIONS.NOTIFICATIONS),
       where('recipient_id', '==', userId),
@@ -295,6 +328,8 @@ export const notificationService = {
 export const realtimeService = {
   // Listen to recent events
   subscribeToRecentEvents(callback) {
+    if (!db) return () => {}; // Return empty unsubscribe function
+    
     const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
     
     const q = query(
@@ -314,6 +349,8 @@ export const realtimeService = {
 
   // Listen to user notifications
   subscribeToNotifications(userId, callback) {
+    if (!db) return () => {}; // Return empty unsubscribe function
+    
     const q = query(
       collection(db, COLLECTIONS.NOTIFICATIONS),
       where('recipient_id', '==', userId),
@@ -332,6 +369,8 @@ export const realtimeService = {
 
   // Listen to specific event
   subscribeToEvent(eventId, callback) {
+    if (!db) return () => {}; // Return empty unsubscribe function
+    
     const eventRef = doc(db, COLLECTIONS.EVENTS, eventId);
     
     return onSnapshot(eventRef, (snapshot) => {
@@ -345,6 +384,8 @@ export const realtimeService = {
 
   // Listen to user profile
   subscribeToProfile(userId, callback) {
+    if (!db) return () => {}; // Return empty unsubscribe function
+    
     const profileRef = doc(db, COLLECTIONS.PROFILES, userId);
     
     return onSnapshot(profileRef, (snapshot) => {
