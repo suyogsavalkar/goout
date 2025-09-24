@@ -65,7 +65,7 @@ export default function AuthButton() {
         Sign in with Google
       </button>
       <p className="text-xs text-gray-600 text-center max-w-xs">
-        Only people with umich.edu email addresses can use this app
+        Sign in with any Google account (testing mode)
       </p>
       {authMessage && (
         <div className={`text-sm text-center max-w-md p-3 rounded-lg ${

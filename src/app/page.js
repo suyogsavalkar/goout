@@ -147,8 +147,8 @@ export default function Home() {
 
         {/* Footer */}
         <div className="text-center mt-16 text-gray-500">
-          <p>Exclusively for University of Michigan students</p>
-          <p className="text-sm mt-2">Sign in with your @umich.edu email to get started</p>
+          <p>Testing Mode - Sign in with any Google account</p>
+          <p className="text-sm mt-2">Email restrictions temporarily disabled for testing</p>
         </div>
       </div>
     </div>

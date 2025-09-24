@@ -8,11 +8,14 @@ export default function TestPage() {
         <p className="text-gray-600 mb-4">
           If you can see this, the deployment is working!
         </p>
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div className="bg-white p-4 rounded-lg shadow text-left">
           <h2 className="font-semibold mb-2">Environment Check:</h2>
           <p>Node ENV: {process.env.NODE_ENV}</p>
           <p>Firebase API Key: {process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? '✅ Set' : '❌ Missing'}</p>
-          <p>Firebase Project ID: {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? '✅ Set' : '❌ Missing'}</p>
+          <p>Firebase Auth Domain: {process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '❌ Missing'}</p>
+          <p>Firebase Project ID: {process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '❌ Missing'}</p>
+          <p>Current Domain: {typeof window !== 'undefined' ? window.location.hostname : 'Server'}</p>
+          <p>Current URL: {typeof window !== 'undefined' ? window.location.href : 'Server'}</p>
         </div>
         <a 
           href="/" 
