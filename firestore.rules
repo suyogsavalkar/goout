@@ -1,0 +1,79 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function hasUMichEmail() {
+      return request.auth.token.email.matches('.*@umich\\.edu$');
+    }
+    
+    function debugAuth() {
+      return request.auth != null;
+    }
+    
+    function isValidProfile(profile) {
+      return profile.keys().hasAll(['name', 'dept', 'username', 'email']) &&
+             profile.name is string &&
+             profile.dept is string &&
+             profile.username is string &&
+             profile.email is string &&
+             profile.username.matches('^[a-zA-Z0-9_]{3,20}$');
+    }
+    
+    function isValidEvent(event) {
+      return event.keys().hasAll(['name', 'category', 'time_event_time', 'host']) &&
+             event.name is string &&
+             event.category is string &&
+             event.time_event_time is timestamp &&
+             event.host is string;
+    }
+    
+    // Profiles collection
+    match /profiles/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow update: if isAuthenticated() && isOwner(userId);
+      allow delete: if isAuthenticated() && isOwner(userId);
+    }
+    
+    // Events collection
+    match /events/{eventId} {
+      allow read: if isAuthenticated() && hasUMichEmail();
+      allow create: if isAuthenticated() && hasUMichEmail() && 
+                       isValidEvent(request.resource.data) &&
+                       request.resource.data.host == request.auth.uid;
+      allow update: if isAuthenticated() && hasUMichEmail() && 
+                       (resource.data.host == request.auth.uid ||
+                        // Allow users to add themselves to requests array
+                        (request.writeFields.hasOnly(['requests']) &&
+                         request.auth.uid in resource.data.requests));
+      allow delete: if isAuthenticated() && hasUMichEmail() && 
+                       resource.data.host == request.auth.uid;
+    }
+    
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && hasUMichEmail() && 
+                     resource.data.recipient_id == request.auth.uid;
+      allow create: if isAuthenticated() && hasUMichEmail();
+      allow update: if isAuthenticated() && hasUMichEmail() && 
+                       resource.data.recipient_id == request.auth.uid &&
+                       request.writeFields.hasOnly(['read']);
+      allow delete: if isAuthenticated() && hasUMichEmail() && 
+                       resource.data.recipient_id == request.auth.uid;
+    }
+    
+    // Test collection (for debugging)
+    match /test/{testId} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}
